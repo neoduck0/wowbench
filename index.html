@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>APHELION — the farthest point</title>
+    <meta name="description" content="A living universe in the browser. Six worlds. One black sun. Click to enter." />
+    <meta name="theme-color" content="#04040a" />
+    <meta property="og:title" content="APHELION — the farthest point" />
+    <meta property="og:description" content="A living universe in the browser. Six worlds. One black sun." />
+    <meta property="og:image" content="assets/black-sun.jpg" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Outfit:wght@300;400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <canvas id="stage" aria-hidden="true"></canvas>
+    <div id="leak"></div>
+    <div id="grain"></div>
+    <div id="vignette"></div>
+
+    <div id="cursor" aria-hidden="true">
+      <div class="ring"></div>
+      <div class="dot"></div>
+    </div>
+
+    <div id="gate">
+      <div class="gate-inner">
+        <div class="sun" aria-hidden="true">
+          <img src="assets/black-sun.jpg" alt="" />
+          <div class="orbit"></div>
+          <div class="orbit slow"></div>
+        </div>
+        <p class="kicker">Observatory 07</p>
+        <h1 class="wordmark">APHELION</h1>
+        <p class="tag">the farthest point from the sun</p>
+        <button class="enter hit" id="enterBtn" type="button">
+          enter
+          <span class="line"></span>
+        </button>
+      </div>
+      <p class="hint">sound on · click to begin</p>
+    </div>
+
+    <div id="hud">
+      <header class="topbar">
+        <div class="brand">Aphelion</div>
+        <div class="coords" id="coords">RA 18h 36m  ·  DEC −23.0°  ·  152.1 Mkm</div>
+        <div>World <span id="worldNum">01</span> / 06</div>
+      </header>
+
+      <div class="world-card" id="worldCard">
+        <div class="num">01</div>
+        <h2>Black Sun</h2>
+        <p>A mass that learned how to listen.</p>
+      </div>
+
+      <div class="auto-flag" id="autoFlag">auto · drifting</div>
+
+      <footer class="bottombar">
+        <div class="nav hit" role="tablist" aria-label="Worlds">
+          <button type="button" class="on" aria-label="Black Sun"></button>
+          <button type="button" aria-label="Prism Sea"></button>
+          <button type="button" aria-label="Synapse"></button>
+          <button type="button" aria-label="Glass Nave"></button>
+          <button type="button" aria-label="Iris Bloom"></button>
+          <button type="button" aria-label="Eventide"></button>
+        </div>
+        <div class="tools">
+          <button class="icon-btn hit" id="muteBtn" type="button" aria-label="Mute">
+            <svg id="muteIcon" viewBox="0 0 24 24">
+              <path d="M4 10v4h3l4 4V6L7 10H4z" />
+              <path d="M15 9a3.5 3.5 0 010 6" />
+              <path d="M17.5 7a6 6 0 010 10" />
+            </svg>
+          </button>
+          <button class="icon-btn hit" id="fullBtn" type="button" aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24">
+              <path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4" />
+            </svg>
+          </button>
+          <button class="icon-btn hit" id="helpBtn" type="button" aria-label="Controls">
+            <svg viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="8" />
+              <path d="M12 11v5M12 8h.01" />
+            </svg>
+          </button>
+        </div>
+      </footer>
+    </div>
+
+    <div id="help">
+      <div class="help-card hit">
+        <h3>Controls</h3>
+        <dl>
+          <dt>Scroll / arrows</dt>
+          <dd>Travel between worlds</dd>
+          <dt>1 – 6</dt>
+          <dd>Jump to a world</dd>
+          <dt>Click / space</dt>
+          <dd>Send a shockwave</dd>
+          <dt>Drag</dt>
+          <dd>Bend the camera</dd>
+          <dt>M</dt>
+          <dd>Mute</dd>
+          <dt>F</dt>
+          <dd>Fullscreen</dd>
+          <dt>S</dt>
+          <dd>Save a still</dd>
+          <dt>?</dt>
+          <dd>This panel</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div id="fail">
+      <div>
+        <h2>No optics</h2>
+        <p>WebGL2 is required to open the observatory.</p>
+      </div>
+    </div>
+
+    <script type="module" src="js/app.js?v=4"></script>
+  </body>
+</html>
