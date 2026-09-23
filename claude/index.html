@@ -1,0 +1,1289 @@
+<title>Event Horizon</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400..600;1,6..96,400..600&family=Martian+Mono:wght@300..500&display=swap">
+<style>
+  :root {
+    color-scheme: dark;
+    --void: #040405;
+    --ink: #EEE7DA;
+    --ink-soft: rgba(238, 231, 218, 0.82);
+    --dim: #938B7D;
+    --faint: rgba(238, 231, 218, 0.15);
+    --flare: #FFB36B;
+    --flare-ink: #1C1006;
+    --hot: #FF5B45;
+    --display: "Bodoni Moda", "Bodoni 72", Didot, Georgia, serif;
+    --mono: "Martian Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--void);
+    color: var(--ink);
+    font: 400 12px/1.5 var(--mono);
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #sky {
+    position: fixed; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    background: var(--void);
+    touch-action: none;
+    cursor: grab;
+  }
+  #sky.dragging { cursor: grabbing; }
+
+  /* ---------- HUD ---------- */
+  .hud {
+    position: fixed; inset: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    column-gap: 48px;
+    row-gap: 16px;
+    padding: calc(28px + env(safe-area-inset-top, 0px)) 32px calc(22px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+    transition: opacity 1.2s ease;
+  }
+  .hud.gone { opacity: 0; }
+  .hud.gone * { pointer-events: none !important; }
+  .hud::before {
+    content: "";
+    position: fixed; inset: 0; z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(55% 55% at 0% 0%, rgba(4,4,5,.78), rgba(4,4,5,0) 72%),
+      radial-gradient(38% 70% at 100% 0%, rgba(4,4,5,.66), rgba(4,4,5,0) 72%),
+      linear-gradient(to top, rgba(4,4,5,.88), rgba(4,4,5,0) 32%);
+  }
+
+  .label {
+    font-size: 10px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .intro {
+    grid-column: 1; grid-row: 1;
+    max-width: 36rem;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .eyebrow {
+    margin: 0;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--dim);
+  }
+  .eyebrow b { font-weight: 400; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .pulse {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--flare);
+    box-shadow: 0 0 10px var(--flare);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: .35; box-shadow: 0 0 2px var(--flare); } }
+
+  h1 {
+    margin: 0;
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(56px, 8.6vw, 132px);
+    line-height: .84;
+    letter-spacing: -.03em;
+    font-variation-settings: "opsz" 96;
+    text-wrap: balance;
+    text-shadow: 0 2px 40px rgba(0,0,0,.6);
+    animation: settle 3.2s cubic-bezier(.2,.7,.1,1) both;
+  }
+  h1 em {
+    font-style: italic;
+    padding-right: .06em;
+    background: linear-gradient(100deg, var(--ink) 10%, #FFD3A1 55%, var(--flare) 90%);
+    -webkit-background-clip: text; background-clip: text;
+    color: transparent;
+  }
+  @keyframes settle { from { letter-spacing: .02em; } to { letter-spacing: -.03em; } }
+
+  .lede {
+    margin: 0;
+    max-width: 29rem;
+    font-family: var(--display);
+    font-size: 17px; line-height: 1.5;
+    color: var(--ink-soft);
+    text-shadow: 0 1px 16px rgba(0,0,0,.9);
+  }
+  .hint { margin: 0; font-size: 10.5px; color: var(--dim); letter-spacing: .04em; }
+  kbd {
+    font: inherit; color: var(--ink);
+    border: 1px solid var(--faint); border-radius: 2px;
+    padding: 0 5px;
+  }
+
+  /* ---------- Telemetry ---------- */
+  .telemetry {
+    grid-column: 2; grid-row: 1 / span 2;
+    align-self: start;
+    display: flex; flex-direction: column;
+    text-shadow: 0 1px 12px rgba(0,0,0,.9);
+  }
+  .telemetry > * { padding-block: 12px; border-top: 1px solid var(--faint); }
+  .big {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-top: 4px;
+    font-family: var(--display);
+    font-size: 64px; line-height: 1;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -.02em;
+  }
+  .unit { font-family: var(--mono); font-size: 12px; color: var(--dim); letter-spacing: 0; }
+  .sub { display: block; margin-top: 6px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .t-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  .val { font-size: 12.5px; text-align: right; font-variant-numeric: tabular-nums; }
+  .val small { display: block; font-size: 10px; color: var(--dim); }
+  .t-clocks .label b { font-weight: 400; color: var(--flare); letter-spacing: .04em; }
+  .clocks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 8px; }
+  .clock { display: block; font-size: 17px; font-variant-numeric: tabular-nums; letter-spacing: -.02em; white-space: nowrap; }
+  .cap { display: block; font-size: 10px; color: var(--dim); letter-spacing: .04em; }
+  .zone {
+    margin: 0;
+    font-family: var(--display); font-style: italic;
+    font-size: 15px; line-height: 1.45;
+    color: var(--ink-soft);
+  }
+  .zone.warn { color: #FFC9A0; }
+
+  /* ---------- Controls ---------- */
+  .deck {
+    grid-column: 1 / -1; grid-row: 3;
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    gap: 18px 28px;
+  }
+  .deck > * { pointer-events: auto; }
+
+  .gauge { flex: 1 1 340px; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+  .gauge-head, .gauge-ends { display: flex; justify-content: space-between; gap: 12px; }
+  .gauge-head .label:last-child { text-transform: none; letter-spacing: .02em; }
+  .track { position: relative; padding-top: 34px; }
+  .ticks { position: absolute; left: 0; right: 0; top: 0; height: 34px; }
+  .tick {
+    position: absolute; bottom: 2px;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 0; border: 0; background: none;
+    font: 9.5px/1.15 var(--mono); letter-spacing: .06em; text-transform: uppercase; text-align: center;
+    color: var(--dim);
+    cursor: pointer;
+  }
+  .tick::after { content: ""; width: 1px; height: 7px; background: currentColor; }
+  .tick:hover, .tick:focus-visible { color: var(--ink); }
+  .tick.ps { color: #FF8A70; }
+  .tick.isco { color: var(--flare); }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    display: block; width: 100%; height: 22px; margin: 0;
+    background: transparent; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    background: linear-gradient(90deg,
+      var(--hot) 0 calc(7px + (100% - 14px) * var(--ps, .1)),
+      var(--flare) 0 calc(7px + (100% - 14px) * var(--isco, .27)),
+      var(--faint) 0);
+  }
+  input[type="range"]::-moz-range-track {
+    height: 2px;
+    background: linear-gradient(90deg,
+      var(--hot) 0 calc(7px + (100% - 14px) * var(--ps, .1)),
+      var(--flare) 0 calc(7px + (100% - 14px) * var(--isco, .27)),
+      var(--faint) 0);
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px; margin-top: -6px;
+    border-radius: 50%; border: 0;
+    background: var(--ink);
+    box-shadow: 0 0 0 5px rgba(255,179,107,.18), 0 0 18px rgba(255,179,107,.7);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px;
+    border-radius: 50%; border: 0;
+    background: var(--ink);
+    box-shadow: 0 0 0 5px rgba(255,179,107,.18), 0 0 18px rgba(255,179,107,.7);
+  }
+
+  .group { display: flex; flex-direction: column; gap: 6px; }
+  .seg { display: flex; flex-wrap: wrap; gap: 4px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 12px;
+    font: 400 10.5px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase;
+    color: var(--ink);
+    background: rgba(4,4,5,.5);
+    border: 1px solid var(--faint); border-radius: 2px;
+    -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+    cursor: pointer;
+    transition: border-color .2s, color .2s, background-color .2s;
+  }
+  .btn:hover { border-color: rgba(238,231,218,.42); }
+  .btn span { color: var(--dim); text-transform: none; letter-spacing: 0; }
+  .seg .btn::before {
+    content: ""; flex: none;
+    width: 6px; height: 6px;
+    border: 1px solid currentColor; opacity: .45;
+  }
+  .seg .btn[aria-pressed="true"] { color: var(--flare); border-color: rgba(255,179,107,.55); }
+  .seg .btn[aria-pressed="true"]::before { background: var(--flare); border-color: var(--flare); opacity: 1; box-shadow: 0 0 8px var(--flare); }
+
+  .fall {
+    padding: 15px 28px;
+    font: 500 11.5px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase;
+    color: var(--flare-ink);
+    background: var(--flare);
+    border: 0; border-radius: 2px;
+    cursor: pointer;
+    box-shadow: 0 0 0 1px rgba(255,179,107,.35), 0 0 44px -6px rgba(255,130,50,.75);
+    transition: transform .2s, box-shadow .2s, opacity .2s;
+  }
+  .fall:hover { box-shadow: 0 0 0 1px rgba(255,179,107,.6), 0 0 60px -4px rgba(255,130,50,.95); }
+  .fall:active { transform: translateY(1px); }
+  .fall:disabled { opacity: .55; cursor: default; box-shadow: none; }
+
+  :focus-visible { outline: 1px solid var(--flare); outline-offset: 3px; }
+
+  /* ---------- Horizon crossing ---------- */
+  .veil {
+    position: fixed; inset: 0;
+    display: grid; place-items: center;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 20px calc(24px + env(safe-area-inset-bottom, 0px));
+    opacity: 0;
+    transition: opacity 1.8s ease;
+    overflow-y: auto;
+  }
+  .veil.show { opacity: 1; }
+  .veil-inner { max-width: 34rem; display: flex; flex-direction: column; gap: 18px; }
+  .veil h2 {
+    margin: 0;
+    font-family: var(--display); font-style: italic; font-weight: 400;
+    font-size: clamp(38px, 6.4vw, 70px); line-height: 1; letter-spacing: -.02em;
+    text-wrap: balance;
+  }
+  .veil p { margin: 0; font-family: var(--display); font-size: 18px; line-height: 1.55; color: var(--ink-soft); }
+  .tau { display: flex; flex-direction: column; gap: 6px; padding-top: 18px; border-top: 1px solid var(--faint); }
+  .tau strong { font-family: var(--display); font-weight: 400; font-size: 48px; line-height: 1; color: var(--flare); }
+  .tau .cap { font-size: 11px; line-height: 1.6; max-width: 30rem; }
+  .veil .btn { align-self: flex-start; padding: 12px 18px; }
+
+  /* ---------- Narrow ---------- */
+  @media (max-width: 760px) {
+    .hud {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: auto minmax(0, 1fr) auto auto;
+      row-gap: 10px;
+      padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+    .intro { gap: 8px; }
+    h1 { font-size: clamp(46px, 14vw, 72px); }
+    .lede { font-size: 14px; }
+    .hint { display: none; }
+    .telemetry {
+      grid-column: 1; grid-row: 3;
+      display: grid; grid-template-columns: 1fr 1fr; column-gap: 16px;
+    }
+    .telemetry > * { padding-block: 8px; }
+    .big { font-size: 38px; }
+    .sub { font-size: 11px; }
+    .clock { font-size: 13px; }
+    .t-row { flex-direction: column; gap: 2px; }
+    .val { text-align: left; }
+    .zone { display: none; }
+    .deck { grid-row: 4; gap: 12px; }
+    .gauge { flex-basis: 100%; }
+    .fall { flex: 1 1 auto; }
+  }
+  @media (max-height: 620px) and (min-width: 761px) {
+    .lede, .zone { display: none; }
+    .big { font-size: 44px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    h1, .pulse { animation: none; }
+  }
+</style>
+
+<canvas id="sky" aria-label="Live render of a black hole and its accretion disk. Drag to orbit; scroll to change distance."></canvas>
+
+<div class="hud" id="hud">
+  <header class="intro">
+    <p class="eyebrow"><span class="pulse" aria-hidden="true"></span>Live ray tracer · <b id="rays">warming up</b></p>
+    <h1>Event <em>Horizon</em></h1>
+    <p class="lede">Every pixel is a ray of light traced backward through curved spacetime, bent around a black hole in real time.</p>
+    <p class="hint" id="hint">Drag to orbit · Scroll to change distance · <kbd>G</kbd> gravity · <kbd>D</kbd> Doppler · <kbd>Space</kbd> fall in</p>
+  </header>
+
+  <aside class="telemetry">
+    <div class="t-dist">
+      <span class="label">Distance from center</span>
+      <div class="big"><span id="rVal">19.0</span><span class="unit">r<sub>s</sub></span></div>
+      <span class="sub" id="rKm">—</span>
+    </div>
+    <div class="t-clocks">
+      <span class="label">Time dilation <b id="dil">×1.027</b></span>
+      <div class="clocks">
+        <div><span class="clock" id="clockYou">00:00.0</span><span class="cap">Your clock</span></div>
+        <div><span class="clock" id="clockFar">00:00.0</span><span class="cap">Far-away clock</span></div>
+      </div>
+    </div>
+    <div class="t-row"><span class="label">Thrust to hover</span><span class="val" id="hover">—</span></div>
+    <div class="t-row"><span class="label">Tidal stretch, 2&nbsp;m body</span><span class="val" id="tidal">—</span></div>
+    <p class="zone" id="zone">—</p>
+  </aside>
+
+  <footer class="deck">
+    <div class="gauge">
+      <div class="gauge-head">
+        <label class="label" for="dist">Distance</label>
+        <span class="label" id="rsDef">—</span>
+      </div>
+      <div class="track">
+        <div class="ticks" id="ticks"></div>
+        <input type="range" id="dist" min="0" max="1000" step="1" value="700" aria-label="Distance from the black hole">
+      </div>
+      <div class="gauge-ends label"><span>Horizon · 1 r<sub>s</sub></span><span>60 r<sub>s</sub></span></div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="massLabel">Mass</span>
+      <div class="seg" role="group" aria-labelledby="massLabel" id="massSeg">
+        <button type="button" class="btn" data-mass="stellar" aria-pressed="false">Stellar <span>10 M☉</span></button>
+        <button type="button" class="btn" data-mass="sgra" aria-pressed="true">Sgr A* <span>4.3 M M☉</span></button>
+        <button type="button" class="btn" data-mass="m87" aria-pressed="false">M87* <span>6.5 B M☉</span></button>
+      </div>
+    </div>
+
+    <div class="group">
+      <span class="label" id="physLabel">Physics</span>
+      <div class="seg" role="group" aria-labelledby="physLabel">
+        <button type="button" class="btn" id="tGravity" aria-pressed="true">Gravity</button>
+        <button type="button" class="btn" id="tDoppler" aria-pressed="true">Doppler</button>
+        <button type="button" class="btn" id="tSound" aria-pressed="false">Sound</button>
+      </div>
+    </div>
+
+    <button type="button" class="fall" id="fall">Fall in</button>
+  </footer>
+</div>
+
+<div class="veil" id="crossing" hidden>
+  <div class="veil-inner">
+    <p class="eyebrow">r &lt; 1 r<sub>s</sub> · no return</p>
+    <h2>You crossed the event horizon.</h2>
+    <p>Every path now leads inward, even light’s. The universe behind you is still visible, but nothing you send will ever reach it.</p>
+    <div class="tau">
+      <strong id="tau">67 seconds</strong>
+      <span class="cap" id="tauCap">—</span>
+    </div>
+    <button type="button" class="btn" id="again">Start again</button>
+  </div>
+</div>
+
+<div class="veil show" id="nogl" hidden>
+  <div class="veil-inner">
+    <h2>This view needs WebGL 2.</h2>
+    <p id="noglMsg">Your browser didn’t provide a WebGL 2 context, so the ray tracer can’t run. Try a current Chrome, Edge, Firefox or Safari with hardware acceleration turned on.</p>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const canvas = $('sky');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================================================================
+   Shaders
+   Units: Schwarzschild radius r_s = 1, so M = 0.5 and the photon
+   sphere sits at r = 1.5, the ISCO at r = 3.
+   ================================================================ */
+const VS = `#version 300 es
+out vec2 vUv;
+void main() {
+  vec2 p = vec2((gl_VertexID << 1) & 2, gl_VertexID & 2);
+  vUv = p;
+  gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
+}`;
+
+const SCENE_FS = `#version 300 es
+precision highp float;
+out vec4 fragColor;
+uniform vec2 uRes;
+uniform vec3 uCamPos;
+uniform mat3 uCamRot;
+uniform float uFov;
+uniform float uGravity;
+uniform float uDoppler;
+uniform float uDiskTime;
+uniform float uOutScale;
+
+const float RIN = 3.0;     // innermost stable circular orbit
+const float ROUT = 15.0;
+const float TDISK = 4700.0;
+
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+vec3 hash33(vec3 p3) {
+  p3 = fract(p3 * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yxz + 33.33);
+  return fract((p3.xxy + p3.yxx) * p3.zyx);
+}
+float vnoise(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(mix(hash13(i), hash13(i + vec3(1,0,0)), f.x),
+        mix(hash13(i + vec3(0,1,0)), hash13(i + vec3(1,1,0)), f.x), f.y),
+    mix(mix(hash13(i + vec3(0,0,1)), hash13(i + vec3(1,0,1)), f.x),
+        mix(hash13(i + vec3(0,1,1)), hash13(i + vec3(1,1,1)), f.x), f.y), f.z);
+}
+float fbm(vec3 p, int oct) {
+  float a = 0.5, s = 0.0;
+  for (int i = 0; i < 6; i++) {
+    if (i >= oct) break;
+    s += a * vnoise(p);
+    p = p * 2.02 + vec3(3.1, 7.7, 1.3);
+    a *= 0.5;
+  }
+  return s;
+}
+
+// Planckian locus approximation, returned roughly linear
+vec3 blackbody(float kelvin) {
+  float t = clamp(kelvin, 1000.0, 40000.0) / 100.0;
+  vec3 c;
+  c.r = t <= 66.0 ? 1.0 : clamp(1.29293618606 * pow(t - 60.0, -0.1332047592), 0.0, 1.0);
+  c.g = t <= 66.0 ? clamp(0.39008157876 * log(t) - 0.63184144378, 0.0, 1.0)
+                  : clamp(1.12989086089 * pow(t - 60.0, -0.0755148492), 0.0, 1.0);
+  c.b = t >= 66.0 ? 1.0 : (t <= 19.0 ? 0.0 : clamp(0.54320678911 * log(t - 10.0) - 1.19625408914, 0.0, 1.0));
+  return c * c;
+}
+
+vec3 starLayer(vec3 d, float scale, float keep) {
+  vec3 p = d * scale;
+  vec3 id = floor(p);
+  vec3 f = fract(p) - 0.5;
+  vec3 h = hash33(id + 11.3);
+  if (h.x > keep) return vec3(0.0);
+  vec3 o = (hash33(id + 71.9) - 0.5) * 0.55;
+  float b = smoothstep(0.17, 0.0, length(f - o));
+  b *= b;
+  float mag = 0.3 + 6.0 * pow(h.y, 10.0);
+  return blackbody(mix(3000.0, 15000.0, h.z * h.z)) * b * mag;
+}
+
+vec3 sky(vec3 d) {
+  vec3 bandN = normalize(vec3(0.35, 1.0, -0.2));
+  float lat = dot(d, bandN);
+  float band = exp(-lat * lat * 9.0);
+  float n1 = fbm(d * 2.6 + 4.0, 5);
+  float n2 = fbm(d * 6.0 - 2.0, 4);
+  float dust = smoothstep(0.52, 0.72, fbm(d * 4.5 + vec3(9.0, 1.0, 3.0), 4)) * band;
+  float glow = band * smoothstep(0.3, 0.8, n1);
+  vec3 neb = mix(vec3(0.15, 0.13, 0.30), vec3(0.62, 0.36, 0.26), n2) * glow * 0.3;
+  neb += vec3(0.010, 0.012, 0.022) * (0.4 + band);
+  neb *= 1.0 - 0.85 * dust;
+  vec3 st = starLayer(d, 70.0, 0.25)
+          + starLayer(d, 150.0, 0.2) * (0.6 + band)
+          + starLayer(d, 290.0, 0.12) * (0.3 + 1.4 * band);
+  st *= 1.0 - 0.8 * dust;
+  return neb + st;
+}
+
+float diskPattern(float r, float a) {
+  vec2 q = vec2(cos(a), sin(a));
+  float rings = fbm(vec3(r * 2.6, q * 1.4), 5);
+  float clumps = fbm(vec3(q * r * 0.55, r * 0.35 + 5.0), 4);
+  return clamp(rings * 0.9 + clumps * 0.6 - 0.38, 0.0, 1.0);
+}
+
+vec4 shadeDisk(vec3 p, vec3 dir, float camRed) {
+  float r = length(p.xz);
+  float phi = atan(p.z, p.x);
+  float omega = sqrt(0.5 / (r * r * r));      // Keplerian angular velocity
+
+  // two-phase flow so differential rotation never winds the texture up
+  const float P = 7.0;
+  float t1 = mod(uDiskTime, P);
+  float t2 = mod(uDiskTime + 0.5 * P, P);
+  float w1 = 1.0 - abs(2.0 * t1 / P - 1.0);
+  float dens = mix(diskPattern(r, phi - omega * t2 * 4.0 + 2.1),
+                   diskPattern(r, phi - omega * t1 * 4.0), w1);
+
+  float edge = smoothstep(RIN, RIN + 0.7, r) * (1.0 - smoothstep(ROUT - 6.0, ROUT, r));
+  float x = RIN / r;
+  float prof = pow(x, 0.75) * pow(max(1.0 - 0.93 * sqrt(x), 0.0), 0.25) / 0.535;
+
+  // relativistic Doppler + gravitational shift
+  vec3 vdir = normalize(vec3(-p.z, 0.0, p.x));
+  float beta = min(sqrt(0.5 / max(r - 1.0, 0.05)), 0.9);
+  float gam = inversesqrt(1.0 - beta * beta);
+  float D = 1.0 / (gam * (1.0 - beta * dot(vdir, -dir)));
+  float grav = sqrt(max(1.0 - 1.0 / r, 0.0)) / camRed;
+  float g = mix(1.0, D * mix(1.0, grav, uGravity), uDoppler);
+  g = clamp(g, 0.1, 3.0);
+
+  float T = TDISK * prof * g;
+  float I = pow(prof * g, 4.0) * 2.6;
+  vec3 c = blackbody(T) * I * (0.3 + 0.95 * dens);
+  return vec4(c, clamp(dens * edge * 1.3, 0.0, 1.0));
+}
+
+void main() {
+  vec2 uv = (gl_FragCoord.xy * 2.0 - uRes) / min(uRes.x, uRes.y);
+  vec3 dir = normalize(uCamRot * vec3(uv * uFov, 1.0));
+  vec3 pos = uCamPos;
+  vec3 vel = dir;
+  vec3 hv = cross(pos, vel);
+  float h2 = dot(hv, hv);
+
+  float rc = length(uCamPos);
+  float camRed = mix(1.0, sqrt(max(1.0 - 1.0 / rc, 1e-4)), uGravity);
+  float escR = max(rc * 1.05, 22.0);
+
+  vec3 col = vec3(0.0);
+  float alpha = 0.0;
+  bool captured = false;
+
+  for (int i = 0; i < 360; i++) {
+    float r2 = dot(pos, pos);
+    float r = sqrt(r2);
+    float dt = clamp(0.085 * (r - 0.55), 0.012, 1.4);
+    // null geodesic in Schwarzschild: x'' = -3/2 h^2 x / r^5
+    vec3 acc = -1.5 * h2 * pos / (r2 * r2 * r) * uGravity;
+    vec3 prev = pos;
+    vel += acc * dt;
+    pos += vel * dt;
+
+    if (prev.y * pos.y < 0.0) {
+      vec3 hit = mix(prev, pos, prev.y / (prev.y - pos.y));
+      float hr = length(hit.xz);
+      if (hr > RIN && hr < ROUT) {
+        vec4 d = shadeDisk(hit, normalize(vel), camRed);
+        col += (1.0 - alpha) * d.rgb * d.a;
+        alpha += (1.0 - alpha) * d.a;
+        if (alpha > 0.985) break;
+      }
+    }
+    float nr2 = dot(pos, pos);
+    if (nr2 < 1.0) { captured = true; break; }
+    if (nr2 > escR * escR && dot(pos, vel) > 0.0) break;
+  }
+
+  if (!captured && alpha < 0.985) {
+    float boost = min(mix(1.0, 1.0 / camRed, uDoppler), 3.0);  // blueshifted sky for a hovering observer
+    col += (1.0 - alpha) * sky(normalize(vel)) * boost;
+  }
+  fragColor = vec4(col * uOutScale, 1.0);
+}`;
+
+const PREFILTER_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 fragColor;
+uniform sampler2D uTex; uniform vec2 uTexel; uniform float uThreshold;
+void main() {
+  vec3 c = texture(uTex, vUv + uTexel * vec2(-1.0, -1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2( 1.0, -1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2(-1.0,  1.0)).rgb
+         + texture(uTex, vUv + uTexel * vec2( 1.0,  1.0)).rgb;
+  c = min(c * 0.25, vec3(64.0));
+  float br = max(c.r, max(c.g, c.b));
+  float knee = uThreshold * 0.5;
+  float soft = clamp(br - uThreshold + knee, 0.0, 2.0 * knee);
+  soft = soft * soft / (4.0 * knee + 1e-4);
+  fragColor = vec4(c * max(soft, br - uThreshold) / max(br, 1e-4), 1.0);
+}`;
+
+const DOWN_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 fragColor;
+uniform sampler2D uTex; uniform vec2 uTexel;
+void main() {
+  vec3 s = texture(uTex, vUv).rgb * 4.0;
+  s += texture(uTex, vUv - uTexel).rgb;
+  s += texture(uTex, vUv + uTexel).rgb;
+  s += texture(uTex, vUv + vec2(uTexel.x, -uTexel.y)).rgb;
+  s += texture(uTex, vUv - vec2(uTexel.x, -uTexel.y)).rgb;
+  fragColor = vec4(s / 8.0, 1.0);
+}`;
+
+const UP_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 fragColor;
+uniform sampler2D uTex; uniform vec2 uTexel;
+void main() {
+  vec2 o = uTexel;
+  vec3 s = texture(uTex, vUv + vec2(-2.0 * o.x, 0.0)).rgb
+         + texture(uTex, vUv + vec2( 2.0 * o.x, 0.0)).rgb
+         + texture(uTex, vUv + vec2(0.0,  2.0 * o.y)).rgb
+         + texture(uTex, vUv + vec2(0.0, -2.0 * o.y)).rgb;
+  s += 2.0 * (texture(uTex, vUv + vec2(-o.x,  o.y)).rgb
+            + texture(uTex, vUv + vec2( o.x,  o.y)).rgb
+            + texture(uTex, vUv + vec2( o.x, -o.y)).rgb
+            + texture(uTex, vUv + vec2(-o.x, -o.y)).rgb);
+  fragColor = vec4(s / 12.0, 1.0);
+}`;
+
+const COMPOSITE_FS = `#version 300 es
+precision highp float;
+in vec2 vUv; out vec4 fragColor;
+uniform sampler2D uScene;
+uniform sampler2D uBloom;
+uniform vec2 uRes;
+uniform float uTime;
+uniform float uFade;
+uniform float uInScale;
+uniform float uBloomStr;
+vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+float h12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+void main() {
+  vec2 d = vUv - 0.5;
+  vec2 off = d * 0.005;
+  vec3 col;
+  col.r = texture(uScene, vUv + off).r;
+  col.g = texture(uScene, vUv).g;
+  col.b = texture(uScene, vUv - off).b;
+  col += texture(uBloom, vUv).rgb * uBloomStr;
+  col *= uInScale * uFade;
+  col = aces(col);
+  float v = length(d * vec2(uRes.x / uRes.y, 1.0));
+  col *= mix(1.0, 0.42, smoothstep(0.3, 1.1, v));
+  col = pow(col, vec3(1.0 / 2.2));
+  float live = smoothstep(0.0, 0.35, uFade);
+  col *= live;
+  col += (h12(gl_FragCoord.xy + fract(uTime * 7.13) * 511.0) - 0.5) * 0.026 * live;
+  fragColor = vec4(max(col, 0.0), 1.0);
+}`;
+
+/* ================================================================
+   Physics + formatting
+   ================================================================ */
+const G = 6.674e-11, C = 2.998e8, MSUN = 1.989e30, G0 = 9.80665, AU = 1.495978707e11;
+const MASSES = {
+  stellar: { m: 10,    caption: 'a 10-solar-mass stellar black hole' },
+  sgra:    { m: 4.3e6, caption: 'Sagittarius A*, the 4.3-million-sun black hole at the center of our galaxy' },
+  m87:     { m: 6.5e9, caption: 'M87*, the 6.5-billion-sun giant photographed by the Event Horizon Telescope' },
+};
+const RMIN = 1.01, RMAX = 60, LMIN = Math.log(RMIN), LMAX = Math.log(RMAX);
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const smoothstep = (e0, e1, x) => { const t = clamp((x - e0) / (e1 - e0), 0, 1); return t * t * (3 - 2 * t); };
+const toT = (r) => (Math.log(r) - LMIN) / (LMAX - LMIN);
+
+function phys(r, massKey) {
+  const M = MASSES[massKey].m * MSUN;
+  const rs = 2 * G * M / (C * C);
+  const rm = r * rs;
+  const dil = 1 / Math.sqrt(Math.max(1 - 1 / r, 1e-12));
+  return {
+    rs, rm, dil,
+    hover: G * M / (rm * rm) * dil / G0,
+    tidal: 2 * G * M * 2 / (rm * rm * rm) / G0,
+    tau: Math.PI * G * M / (C * C * C),
+  };
+}
+const SUP = { '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹' };
+function sci(x) {
+  if (!isFinite(x)) return '∞';
+  const ax = Math.abs(x);
+  if (ax >= 0.01 && ax < 10000) return ax < 10 ? x.toFixed(2) : ax < 100 ? x.toFixed(1) : Math.round(x).toLocaleString('en-US');
+  const [m, e] = x.toExponential(1).split('e');
+  return m + ' × 10' + String(parseInt(e, 10)).replace(/./g, (c) => SUP[c]);
+}
+function fmtDist(m) {
+  const km = m / 1000;
+  if (km < 1e6) return km.toLocaleString('en-US', { maximumFractionDigits: km < 100 ? 1 : 0 }) + ' km';
+  const au = m / AU;
+  if (au < 1) return (km / 1e6).toFixed(km < 1e7 ? 2 : 1) + ' million km';
+  return (au < 100 ? au.toFixed(2) : Math.round(au).toLocaleString('en-US')) + ' AU';
+}
+function fmtClock(s) {
+  if (s < 3600) {
+    const m = Math.floor(s / 60), sec = Math.floor((s - m * 60) * 10) / 10;
+    return String(m).padStart(2, '0') + ':' + sec.toFixed(1).padStart(4, '0');
+  }
+  if (s < 86400 * 3) {
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60);
+    return h + ':' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+  if (s < 3.156e7 * 2) return (s / 86400).toFixed(1) + ' days';
+  return (s / 3.156e7).toFixed(1) + ' years';
+}
+function fmtDur(s) {
+  if (s < 1e-3) return Math.round(s * 1e6) + ' microseconds';
+  if (s < 1) return (s * 1e3).toFixed(1) + ' milliseconds';
+  if (s < 120) return Math.round(s) + ' seconds';
+  if (s < 7200) return (s / 60).toFixed(1) + ' minutes';
+  if (s < 172800) return (s / 3600).toFixed(1) + ' hours';
+  return (s / 86400).toFixed(1) + ' days';
+}
+function tidalVerdict(g) {
+  if (g < 0.1) return 'unnoticeable';
+  if (g < 3) return 'a firm pull';
+  if (g < 30) return 'lethal';
+  return 'spaghettified';
+}
+function zoneText(r) {
+  if (r < 1.5) return 'Inside the photon sphere. Only light aimed almost straight up escapes — the whole sky is squeezed into a shrinking circle overhead.';
+  if (r < 3) return 'Inside the innermost stable orbit. Nothing can circle here; matter that drifts this close spirals in.';
+  if (r < 15) return 'Within the accretion disk. Its far side is lensed up and over the shadow, and under it too.';
+  return 'Far field. Gravity still folds the back of the disk over the top of the hole.';
+}
+
+/* ================================================================
+   State
+   ================================================================ */
+const START_R = 19;
+const state = {
+  yaw: reduceMotion ? 0.9 : 0.35,
+  pitch: reduceMotion ? 0.13 : 0.55,
+  yawVel: 0, pitchVel: 0,
+  logDist: Math.log(reduceMotion ? START_R : 52),
+  targetLogDist: Math.log(START_R),
+  intro: !reduceMotion,
+  gravity: 1, gravityTarget: 1,
+  doppler: 1, dopplerTarget: 1,
+  mass: 'sgra',
+  falling: false, fallT: 0, fallU0: 0,
+  crossed: false, crossT: 0, veilShown: false,
+  fade: 0.35,
+  lastInteract: -1e9,
+  clockYou: 0, clockFar: 0,
+  diskTime: 0,
+  time: 0,
+};
+const FALL_SECONDS = 12;
+
+/* ================================================================
+   Audio: a drone that sinks and roughens as you approach
+   ================================================================ */
+const audio = {
+  ctx: null, on: false, n: null,
+  start() {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    if (!this.ctx) { this.ctx = new AC(); this.build(); }
+    this.ctx.resume();
+    this.on = true;
+    return true;
+  },
+  stop() { this.on = false; this.update(Math.exp(state.logDist), state.fade); },
+  build() {
+    const c = this.ctx;
+    const master = c.createGain(); master.gain.value = 0;
+    const comp = c.createDynamicsCompressor();
+    master.connect(comp).connect(c.destination);
+    const filt = c.createBiquadFilter(); filt.type = 'lowpass'; filt.frequency.value = 500; filt.Q.value = 5;
+    const drone = c.createGain(); drone.gain.value = 0.16;
+    filt.connect(drone).connect(master);
+    const oscs = [['sawtooth', 1, 0.3], ['sawtooth', 1.006, 0.3], ['sine', 0.5, 0.9], ['triangle', 1.498, 0.22]].map(([type, mult, vol]) => {
+      const o = c.createOscillator(); o.type = type; o.frequency.value = 50 * mult;
+      const g = c.createGain(); g.gain.value = vol;
+      o.connect(g).connect(filt); o.start();
+      return { o, mult };
+    });
+    const lfo = c.createOscillator(); lfo.frequency.value = 0.08;
+    const lfoAmt = c.createGain(); lfoAmt.gain.value = 110;
+    lfo.connect(lfoAmt).connect(filt.frequency); lfo.start();
+    const buf = c.createBuffer(1, c.sampleRate * 2, c.sampleRate);
+    const data = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < data.length; i++) { last = (last + 0.02 * (Math.random() * 2 - 1)) / 1.02; data[i] = last * 3.5; }
+    const noise = c.createBufferSource(); noise.buffer = buf; noise.loop = true;
+    const nf = c.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 260;
+    const ng = c.createGain(); ng.gain.value = 0.05;
+    noise.connect(nf).connect(ng).connect(master); noise.start();
+    this.n = { master, filt, oscs, nf, ng };
+  },
+  update(r, fade) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    const red = Math.sqrt(Math.max(1 - 1 / r, 0));
+    const base = 24 + 32 * red;
+    this.n.oscs.forEach(({ o, mult }) => o.frequency.setTargetAtTime(base * mult, t, 0.35));
+    this.n.filt.frequency.setTargetAtTime(130 + 950 * red * red, t, 0.35);
+    this.n.nf.frequency.setTargetAtTime(220 + 700 * (1 - red), t, 0.35);
+    this.n.ng.gain.setTargetAtTime(0.05 + 0.7 * (1 - red), t, 0.35);
+    this.n.master.gain.setTargetAtTime(this.on ? 0.85 * Math.min(fade, 1) : 0, t, this.on ? 0.5 : 0.2);
+  },
+};
+
+/* ================================================================
+   HUD wiring
+   ================================================================ */
+const el = {
+  hud: $('hud'), rays: $('rays'), rVal: $('rVal'), rKm: $('rKm'), dil: $('dil'),
+  clockYou: $('clockYou'), clockFar: $('clockFar'), hover: $('hover'), tidal: $('tidal'),
+  zone: $('zone'), rsDef: $('rsDef'), dist: $('dist'), ticks: $('ticks'),
+  fall: $('fall'), tGravity: $('tGravity'), tDoppler: $('tDoppler'), tSound: $('tSound'),
+  crossing: $('crossing'), tau: $('tau'), tauCap: $('tauCap'), again: $('again'),
+};
+
+if (matchMedia('(pointer: coarse)').matches) {
+  $('hint').textContent = 'Drag to orbit · Pinch to change distance';
+}
+
+const TICKS = [
+  { r: 1.5, html: 'Photon<br>sphere', cls: 'ps', aria: 'Jump to the photon sphere, 1.5 Schwarzschild radii' },
+  { r: 3, html: 'ISCO', cls: 'isco', aria: 'Jump to the innermost stable circular orbit, 3 Schwarzschild radii' },
+  { r: 15, html: 'Disk<br>edge', cls: '', aria: 'Jump to the outer edge of the accretion disk, 15 Schwarzschild radii' },
+];
+el.dist.style.setProperty('--ps', toT(1.5));
+el.dist.style.setProperty('--isco', toT(3));
+for (const t of TICKS) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'tick ' + t.cls;
+  b.innerHTML = t.html;
+  b.setAttribute('aria-label', t.aria);
+  b.style.left = `calc(7px + (100% - 14px) * ${toT(t.r)})`;
+  b.addEventListener('click', () => { if (state.falling || state.crossed) return; interact(); state.targetLogDist = Math.log(t.r); });
+  el.ticks.appendChild(b);
+}
+
+function setPressed(btn, on) { btn.setAttribute('aria-pressed', String(on)); }
+function interact() { state.lastInteract = performance.now(); state.intro = false; }
+
+function setMass(key) {
+  state.mass = key;
+  document.querySelectorAll('#massSeg .btn').forEach((b) => setPressed(b, b.dataset.mass === key));
+  el.rsDef.innerHTML = '1 r<sub>s</sub> = ' + fmtDist(phys(1, key).rs);
+  updateHud(true);
+}
+document.querySelectorAll('#massSeg .btn').forEach((b) => b.addEventListener('click', () => setMass(b.dataset.mass)));
+
+function toggleGravity() { state.gravityTarget = state.gravityTarget > 0.5 ? 0 : 1; setPressed(el.tGravity, state.gravityTarget > 0.5); }
+function toggleDoppler() { state.dopplerTarget = state.dopplerTarget > 0.5 ? 0 : 1; setPressed(el.tDoppler, state.dopplerTarget > 0.5); }
+function toggleSound() {
+  if (audio.on) { audio.stop(); setPressed(el.tSound, false); }
+  else if (audio.start()) { setPressed(el.tSound, true); audio.update(Math.exp(state.logDist), state.fade); }
+}
+el.tGravity.addEventListener('click', toggleGravity);
+el.tDoppler.addEventListener('click', toggleDoppler);
+el.tSound.addEventListener('click', toggleSound);
+
+el.dist.addEventListener('input', () => {
+  if (state.falling || state.crossed) return;
+  interact();
+  state.targetLogDist = LMIN + (el.dist.value / 1000) * (LMAX - LMIN);
+});
+
+function startFall() {
+  if (state.falling || state.crossed) return;
+  interact();
+  state.falling = true;
+  state.fallT = 0;
+  state.fallU0 = Math.log(Math.exp(state.logDist) - 1);
+  el.fall.disabled = true;
+  el.fall.textContent = 'Falling…';
+}
+el.fall.addEventListener('click', startFall);
+
+function crossHorizon() {
+  state.falling = false;
+  state.crossed = true;
+  state.crossT = 0;
+  state.veilShown = false;
+  el.hud.classList.add('gone');
+  const p = phys(1, state.mass);
+  el.tau.textContent = fmtDur(p.tau);
+  el.tauCap.textContent = `of your own time remain, at most, before the singularity — for ${MASSES[state.mass].caption}.`;
+}
+el.again.addEventListener('click', () => {
+  el.crossing.classList.remove('show');
+  setTimeout(() => { el.crossing.hidden = true; }, 600);
+  el.hud.classList.remove('gone');
+  state.crossed = false;
+  state.logDist = state.targetLogDist = Math.log(START_R);
+  state.fade = 0;
+  el.fall.disabled = false;
+  el.fall.textContent = 'Fall in';
+  el.fall.focus({ preventScroll: true });
+});
+
+let lastHud = 0;
+function updateHud(force) {
+  const now = performance.now();
+  if (!force && now - lastHud < 100) return;
+  lastHud = now;
+  const r = Math.exp(state.logDist);
+  const p = phys(r, state.mass);
+  el.rVal.textContent = r < 10 ? r.toFixed(2) : r.toFixed(1);
+  el.rKm.textContent = fmtDist(p.rm) + ' from the singularity';
+  el.dil.textContent = '×' + (p.dil < 10 ? p.dil.toFixed(3) : p.dil < 1000 ? p.dil.toFixed(1) : sci(p.dil));
+  el.clockYou.textContent = fmtClock(state.clockYou);
+  el.clockFar.textContent = fmtClock(state.clockFar);
+  el.hover.innerHTML = `${sci(p.hover)} g`;
+  el.tidal.innerHTML = `${sci(p.tidal)} g<small>${tidalVerdict(p.tidal)}</small>`;
+  el.zone.textContent = zoneText(r);
+  el.zone.classList.toggle('warn', r < 3);
+  if (document.activeElement !== el.dist || state.falling) {
+    el.dist.value = Math.round(clamp(toT(r), 0, 1) * 1000);
+  }
+  el.dist.setAttribute('aria-valuetext', `${r.toFixed(2)} Schwarzschild radii`);
+  audio.update(r, state.fade);
+}
+
+/* ================================================================
+   Input on the canvas
+   ================================================================ */
+const pointers = new Map();
+let pinchD = 0, lastMoveT = 0;
+const pinchDist = () => { const [a, b] = [...pointers.values()]; return Math.hypot(a.x - b.x, a.y - b.y); };
+
+canvas.addEventListener('pointerdown', (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  canvas.classList.add('dragging');
+  interact();
+  state.yawVel = state.pitchVel = 0;
+  if (pointers.size === 2) pinchD = pinchDist();
+});
+canvas.addEventListener('pointermove', (e) => {
+  const p = pointers.get(e.pointerId);
+  if (!p) return;
+  const dx = e.clientX - p.x, dy = e.clientY - p.y;
+  p.x = e.clientX; p.y = e.clientY;
+  interact();
+  if (pointers.size === 1) {
+    state.yaw -= dx * 0.0055;
+    state.pitch = clamp(state.pitch + dy * 0.0045, -1.45, 1.45);
+    state.yawVel = state.yawVel * 0.5 + (-dx * 0.0055 * 60) * 0.5;
+    state.pitchVel = state.pitchVel * 0.5 + (dy * 0.0045 * 60) * 0.5;
+    lastMoveT = performance.now();
+  } else if (pointers.size === 2 && !state.falling && !state.crossed) {
+    const d = pinchDist();
+    if (pinchD > 0) state.targetLogDist = clamp(state.targetLogDist - Math.log(d / pinchD) * 1.3, LMIN, LMAX);
+    pinchD = d;
+  }
+});
+function endPointer(e) {
+  pointers.delete(e.pointerId);
+  if (pointers.size < 2) pinchD = 0;
+  if (pointers.size === 0) {
+    canvas.classList.remove('dragging');
+    if (performance.now() - lastMoveT > 90) state.yawVel = state.pitchVel = 0;
+  }
+}
+canvas.addEventListener('pointerup', endPointer);
+canvas.addEventListener('pointercancel', endPointer);
+canvas.addEventListener('wheel', (e) => {
+  e.preventDefault();
+  if (state.falling || state.crossed) return;
+  interact();
+  const dy = e.deltaY * (e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1);
+  state.targetLogDist = clamp(state.targetLogDist + dy * 0.0011, LMIN, LMAX);
+}, { passive: false });
+
+addEventListener('keydown', (e) => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.target === el.dist && e.key.startsWith('Arrow')) return;
+  const k = e.key.toLowerCase();
+  if (k === 'g') toggleGravity();
+  else if (k === 'd') toggleDoppler();
+  else if (k === 'm') toggleSound();
+  else if (k === ' ' && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); if (state.crossed) el.again.click(); else startFall(); }
+  else if (k === 'arrowleft') { interact(); state.yawVel += 0.9; }
+  else if (k === 'arrowright') { interact(); state.yawVel -= 0.9; }
+  else if (k === 'arrowup') { interact(); state.pitchVel -= 0.7; }
+  else if (k === 'arrowdown') { interact(); state.pitchVel += 0.7; }
+  else if ((k === '+' || k === '=') && !state.falling && !state.crossed) { interact(); state.targetLogDist = clamp(state.targetLogDist - 0.15, LMIN, LMAX); }
+  else if (k === '-' && !state.falling && !state.crossed) { interact(); state.targetLogDist = clamp(state.targetLogDist + 0.15, LMIN, LMAX); }
+});
+
+/* ================================================================
+   WebGL
+   ================================================================ */
+function fail(msg) {
+  if (msg) $('noglMsg').textContent = msg;
+  $('nogl').hidden = false;
+  el.hud.classList.add('gone');
+}
+
+const gl = canvas.getContext('webgl2', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'high-performance' });
+if (!gl) { fail(); return; }
+
+let P;
+try {
+  const compile = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  const vs = compile(gl.VERTEX_SHADER, VS);
+  const program = (fsSrc) => {
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, compile(gl.FRAGMENT_SHADER, fsSrc));
+    gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+    const u = {};
+    const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const info = gl.getActiveUniform(p, i); u[info.name] = gl.getUniformLocation(p, info.name); }
+    return { p, u };
+  };
+  P = { scene: program(SCENE_FS), pre: program(PREFILTER_FS), down: program(DOWN_FS), up: program(UP_FS), comp: program(COMPOSITE_FS) };
+} catch (err) {
+  console.error(err);
+  fail('The GPU refused to compile the ray tracer, so the view can’t run on this device. A desktop browser with hardware acceleration usually works.');
+  return;
+}
+
+gl.bindVertexArray(gl.createVertexArray());
+
+function fboComplete(internal, type) {
+  const t = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, t);
+  gl.texImage2D(gl.TEXTURE_2D, 0, internal, 4, 4, 0, gl.RGBA, type, null);
+  const f = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+  const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+  gl.deleteFramebuffer(f); gl.deleteTexture(t);
+  return ok;
+}
+const hdr = !!gl.getExtension('EXT_color_buffer_float') && fboComplete(gl.RGBA16F, gl.HALF_FLOAT);
+const FMT = hdr ? { internal: gl.RGBA16F, type: gl.HALF_FLOAT } : { internal: gl.RGBA8, type: gl.UNSIGNED_BYTE };
+const OUT_SCALE = hdr ? 1 : 0.25;   // LDR fallback: squeeze HDR range into 8 bits
+
+function makeTarget(w, h) {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, FMT.internal, w, h, 0, gl.RGBA, FMT.type, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  const fb = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+  return { tex, fb, w, h };
+}
+function freeTarget(t) { gl.deleteTexture(t.tex); gl.deleteFramebuffer(t.fb); }
+
+const START_BUDGET = 750000, MAX_PIXELS = 2400000;
+let scene = null, chain = [], renderScale = 0;
+function buildTargets() {
+  if (scene) freeTarget(scene);
+  chain.forEach(freeTarget);
+  const sw = Math.max(2, Math.round(canvas.width * renderScale));
+  const sh = Math.max(2, Math.round(canvas.height * renderScale));
+  scene = makeTarget(sw, sh);
+  chain = [];
+  let w = sw, h = sh;
+  for (let i = 0; i < 5; i++) { w = Math.max(1, w >> 1); h = Math.max(1, h >> 1); chain.push(makeTarget(w, h)); }
+}
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.max(1, Math.floor(innerWidth * dpr)), h = Math.max(1, Math.floor(innerHeight * dpr));
+  if (w === canvas.width && h === canvas.height && scene) return;
+  canvas.width = w; canvas.height = h;
+  const cap = Math.sqrt(START_BUDGET / (w * h));
+  renderScale = clamp(renderScale ? Math.min(renderScale, Math.sqrt(MAX_PIXELS / (w * h))) : cap, 0.25, 1);
+  buildTargets();
+}
+addEventListener('resize', resize);
+resize();
+
+let contextLost = false;
+canvas.addEventListener('webglcontextlost', (e) => {
+  e.preventDefault();
+  contextLost = true;
+  fail('The graphics driver reset and the ray tracer stopped. Reload the page to start it again.');
+});
+
+function draw(prog, target, bind) {
+  gl.bindFramebuffer(gl.FRAMEBUFFER, target ? target.fb : null);
+  gl.viewport(0, 0, target ? target.w : canvas.width, target ? target.h : canvas.height);
+  gl.useProgram(prog.p);
+  bind(prog.u);
+  gl.drawArrays(gl.TRIANGLES, 0, 3);
+}
+function bindTex(unit, tex, loc) {
+  gl.activeTexture(gl.TEXTURE0 + unit);
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.uniform1i(loc, unit);
+}
+
+/* camera basis */
+const sub3 = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+const add3 = (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]];
+const mul3 = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
+const cross3 = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+const norm3 = (a) => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+
+function camera(r, t) {
+  const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
+  const pos = [r * cp * Math.sin(state.yaw), r * sp, r * cp * Math.cos(state.yaw)];
+  const f = norm3(sub3([0, 0, 0], pos));
+  const right = norm3(cross3(f, [0, 1, 0]));
+  const up = cross3(right, f);
+  // close to the horizon, tilt the view back toward the shrinking sky
+  let th = 2.5 * smoothstep(2.6, 1.12, r);
+  let yawJ = 0;
+  if (state.falling && !reduceMotion) {
+    const amt = Math.min(0.0035 / Math.max(r - 0.985, 0.02), 0.03);
+    th += amt * (Math.sin(t * 37.1) * 0.6 + Math.sin(t * 23.7 + 1.3) * 0.4);
+    yawJ = amt * (Math.sin(t * 31.3 + 0.5) * 0.6 + Math.sin(t * 19.1) * 0.4);
+  }
+  let fw = add3(mul3(f, Math.cos(th)), mul3(up, Math.sin(th)));
+  let upw = add3(mul3(f, -Math.sin(th)), mul3(up, Math.cos(th)));
+  fw = norm3(add3(fw, mul3(right, yawJ)));
+  const rw = norm3(cross3(fw, upw));
+  upw = cross3(rw, fw);
+  return { pos, rot: [...rw, ...upw, ...fw] };
+}
+
+/* ================================================================
+   Frame loop
+   ================================================================ */
+let lastT = performance.now(), adaptAcc = 0, adaptN = 0, lastAdapt = lastT, fps = 0, lastRays = 0;
+const bootT = lastT;
+
+function frame(now) {
+  if (contextLost) return;
+  requestAnimationFrame(frame);
+  const dt = Math.min((now - lastT) / 1000, 0.1);
+  lastT = now;
+  state.time += dt;
+
+  // --- motion ---
+  if (state.falling) {
+    state.fallT += dt;
+    const s = Math.min(state.fallT / FALL_SECONDS, 1);
+    const e = s < 0.5 ? 4 * s * s * s : 1 - Math.pow(-2 * s + 2, 3) / 2;
+    const u = state.fallU0 + (Math.log(0.006) - state.fallU0) * e;
+    state.logDist = state.targetLogDist = Math.log(1 + Math.exp(u));
+    if (!reduceMotion) state.yaw += dt * 0.12 * s;
+    if (s >= 1) crossHorizon();
+  } else if (!state.crossed) {
+    const rate = state.intro ? 0.75 : 2.4;
+    state.logDist += (state.targetLogDist - state.logDist) * (1 - Math.exp(-dt * rate));
+  }
+  if (state.intro) state.pitch += (0.13 - state.pitch) * (1 - Math.exp(-dt * 0.7));
+
+  if (pointers.size === 0) {
+    state.yaw += state.yawVel * dt;
+    state.pitch = clamp(state.pitch + state.pitchVel * dt, -1.45, 1.45);
+    const damp = Math.exp(-dt * 2.6);
+    state.yawVel *= damp; state.pitchVel *= damp;
+    if (!reduceMotion && now - state.lastInteract > 4000) state.yaw += dt * 0.035;
+  }
+  state.gravity += (state.gravityTarget - state.gravity) * (1 - Math.exp(-dt * 2.2));
+  state.doppler += (state.dopplerTarget - state.doppler) * (1 - Math.exp(-dt * 2.2));
+  state.diskTime += reduceMotion ? dt * 0.35 : dt;
+
+  const r = Math.exp(state.logDist);
+
+  // --- exposure: fade in, or flash-and-black at the horizon ---
+  if (state.crossed) {
+    state.crossT += dt;
+    const c = state.crossT;
+    state.fade = reduceMotion ? Math.max(0, 1 - c / 1.2)
+      : c < 0.22 ? 1 + 3.5 * (c / 0.22)
+      : Math.max(0, 4.5 * (1 - (c - 0.22) / 1.4));
+    if (state.fade <= 0 && !state.veilShown) {
+      state.veilShown = true;
+      el.crossing.hidden = false;
+      requestAnimationFrame(() => el.crossing.classList.add('show'));
+      el.again.focus({ preventScroll: true });
+    }
+  } else {
+    state.fade += (1 - state.fade) * (1 - Math.exp(-dt * 1.6));
+    const dil = 1 / Math.sqrt(Math.max(1 - 1 / r, 1e-12));
+    state.clockYou += dt;
+    state.clockFar += dt * dil;
+  }
+
+  // --- adaptive resolution ---
+  adaptAcc += dt; adaptN++;
+  if (now - lastAdapt > 1200 && now - bootT > 2500) {
+    const avg = adaptAcc / adaptN;
+    fps = 1 / avg;
+    let ns = renderScale;
+    if (avg > 0.024) ns *= 0.84;
+    else if (avg < 0.0145 && canvas.width * canvas.height * ns * ns < MAX_PIXELS) ns *= 1.08;
+    ns = clamp(ns, 0.25, 1);
+    if (Math.abs(ns - renderScale) > 0.01) { renderScale = ns; buildTargets(); }
+    adaptAcc = 0; adaptN = 0; lastAdapt = now;
+  }
+  if (fps && now - lastRays > 500) {
+    lastRays = now;
+    el.rays.textContent = `${(scene.w * scene.h * fps / 1e6).toFixed(1)} M rays/s · ${Math.round(fps)} fps`;
+  }
+
+  // --- render ---
+  if (state.fade > 0.001) {
+    const cam = camera(r, state.time);
+    draw(P.scene, scene, (u) => {
+      gl.uniform2f(u.uRes, scene.w, scene.h);
+      gl.uniform3fv(u.uCamPos, cam.pos);
+      gl.uniformMatrix3fv(u.uCamRot, false, cam.rot);
+      gl.uniform1f(u.uFov, 0.6);
+      gl.uniform1f(u.uGravity, state.gravity);
+      gl.uniform1f(u.uDoppler, state.doppler);
+      gl.uniform1f(u.uDiskTime, state.diskTime);
+      gl.uniform1f(u.uOutScale, OUT_SCALE);
+    });
+    draw(P.pre, chain[0], (u) => {
+      bindTex(0, scene.tex, u.uTex);
+      gl.uniform2f(u.uTexel, 1 / scene.w, 1 / scene.h);
+      gl.uniform1f(u.uThreshold, 0.9 * OUT_SCALE);
+    });
+    for (let i = 1; i < chain.length; i++) {
+      draw(P.down, chain[i], (u) => {
+        bindTex(0, chain[i - 1].tex, u.uTex);
+        gl.uniform2f(u.uTexel, 1 / chain[i - 1].w, 1 / chain[i - 1].h);
+      });
+    }
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    for (let i = chain.length - 2; i >= 0; i--) {
+      draw(P.up, chain[i], (u) => {
+        bindTex(0, chain[i + 1].tex, u.uTex);
+        gl.uniform2f(u.uTexel, 1 / chain[i + 1].w, 1 / chain[i + 1].h);
+      });
+    }
+    gl.disable(gl.BLEND);
+  }
+  draw(P.comp, null, (u) => {
+    bindTex(0, scene.tex, u.uScene);
+    bindTex(1, chain[0].tex, u.uBloom);
+    gl.uniform2f(u.uRes, canvas.width, canvas.height);
+    gl.uniform1f(u.uTime, state.time);
+    gl.uniform1f(u.uFade, state.fade);
+    gl.uniform1f(u.uInScale, 1 / OUT_SCALE);
+    gl.uniform1f(u.uBloomStr, 0.16);
+  });
+
+  updateHud(false);
+}
+
+setMass('sgra');
+requestAnimationFrame(frame);
+})();
+</script>
