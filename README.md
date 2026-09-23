@@ -8,6 +8,7 @@ One-shot websites built by different models from an empty folder, each given the
 | --- | --- | --- | --- | --- | --- |
 | [`grok/`](grok/) | **Grok 4.6** | High | Grok Build | 33 minutes | APHELION |
 | [`claude/`](claude/) | **Claude Opus 5.5** | High | Claude Code | 13 minutes | Event Horizon |
+| [`space-bunny/`](space-bunny/) | **Space Bunny Free** | High | OpenCode | 2 minutes 28 seconds | VOID/03 |
 
 ## Grok: APHELION
 
@@ -34,3 +35,16 @@ python3 -m http.server 8000
 Then open [http://localhost:8000](http://localhost:8000).
 
 Drag to orbit. Scroll to change distance. `G` toggles gravity, `D` toggles Doppler, and `Space` falls in.
+
+## Space Bunny Free: VOID/03
+
+Four scroll-driven worlds in one procedural shader, with a nebula, an aurora, an impossible machine, and an event horizon. It also has pointer-reactive shockwaves, glitch type, and a generative ambient soundtrack. HTML, CSS, and WebGL2, with a 2D canvas fallback.
+
+```bash
+cd space-bunny
+python3 -m http.server 8000
+```
+
+Then open [http://localhost:8000](http://localhost:8000).
+
+Click **Initiate Descent**. Scroll or press `Space` to travel. **Fracture the Sky** breaks the background, and the top-right button toggles sound.

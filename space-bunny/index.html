@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#030207" />
+  <meta name="description" content="A strange little universe that responds to you." />
+  <title>VOID/03 — Enter the Unwritten</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="cursor" aria-hidden="true"><span>ENTER</span></div>
+
+  <div class="loader" id="loader" aria-live="polite">
+    <div class="loader__mark">
+      <svg viewBox="0 0 160 160" aria-hidden="true">
+        <circle cx="80" cy="80" r="56" />
+        <path d="M80 18v124M18 80h124M36 36l88 88M124 36l-88 88" />
+        <circle cx="80" cy="80" r="14" />
+      </svg>
+      <span id="loaderNumber">00</span>
+    </div>
+    <p>CALIBRATING IMPOSSIBILITY</p>
+  </div>
+
+  <canvas id="universe" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <div class="flash" id="flash" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#origin" aria-label="Void home">
+      <span class="brand__orb"></span>
+      <span>VOID/03</span>
+    </a>
+    <div class="topbar__status">
+      <span class="live-dot"></span>
+      SIGNAL STABLE
+    </div>
+    <button class="sound-toggle" id="soundToggle" aria-pressed="false" aria-label="Enable sound">
+      <span class="sound-toggle__bars"><i></i><i></i><i></i><i></i></span>
+      <span class="sound-toggle__text">SOUND OFF</span>
+    </button>
+  </header>
+
+  <aside class="coordinates" aria-hidden="true">
+    <span>LAT 35.6762° N</span>
+    <span>LON 139.6503° E</span>
+    <span id="worldDepth">DEPTH 000.00</span>
+  </aside>
+
+  <aside class="side-index" aria-label="World navigation">
+    <span class="side-index__label">WORLD INDEX</span>
+    <a href="#origin" class="is-active" data-world="0"><i></i><b>00</b></a>
+    <a href="#bloom" data-world="1"><i></i><b>01</b></a>
+    <a href="#machine" data-world="2"><i></i><b>02</b></a>
+    <a href="#zero" data-world="3"><i></i><b>03</b></a>
+  </aside>
+
+  <main>
+    <section class="chapter chapter--hero" id="origin" data-chapter="0">
+      <div class="hero-copy">
+        <p class="eyebrow reveal">AN EXPERIMENT IN SYNTHETIC WONDER <span>/// 0001</span></p>
+        <h1 class="mega-title" aria-label="Enter the unwritten">
+          <span class="line"><span>ENTER THE</span></span>
+          <span class="line line--accent"><span>UNWRITTEN</span></span>
+        </h1>
+        <p class="hero-note">A universe is watching you.<br />Do not look directly at forever.</p>
+        <button class="enter-button magnetic" id="enterButton">
+          <span class="enter-button__circle"><span>↘</span></span>
+          <span class="enter-button__copy"><b>INITIATE DESCENT</b><small>ENTER SOMETHING STRANGE</small></span>
+        </button>
+      </div>
+      <div class="scroll-cue"><span>SCROLL TO MUTATE REALITY</span><i></i></div>
+      <div class="hero-stamp" aria-hidden="true">UNKNOWN<br />BY DESIGN</div>
+    </section>
+
+    <section class="chapter chapter--bloom" id="bloom" data-chapter="1">
+      <div class="chapter__number" aria-hidden="true">01</div>
+      <div class="chapter__copy reveal-block">
+        <p class="eyebrow">WORLD 01 / THE LIVING AURORA</p>
+        <h2>COLOR<br />REMEMBERS<br /><em>TO MOVE.</em></h2>
+        <p>Every color here was born from a number between zero and one. The rest is electricity, instinct, and a little trouble.</p>
+        <div class="specimen" aria-label="Specimen coordinates">
+          <span>SPECIMEN</span><b>λ-00C0FF</b><span>BEHAVIOR</span><b>UNREASONABLY ALIVE</b>
+        </div>
+      </div>
+    </section>
+
+    <section class="chapter chapter--machine" id="machine" data-chapter="2">
+      <div class="chapter__number chapter__number--right" aria-hidden="true">02</div>
+      <div class="chapter__copy chapter__copy--right reveal-block">
+        <p class="eyebrow">WORLD 02 / THE IMPOSSIBLE MACHINE</p>
+        <h2>REALITY<br />IS ONLY<br /><em>A SUGGESTION.</em></h2>
+        <p>Move your cursor. The machine notices. Somewhere, a pixel is becoming a portal and forgetting how to be a pixel.</p>
+        <button class="text-link magnetic" id="fractureButton">FRACTURE THE SKY <span>↗</span></button>
+      </div>
+    </section>
+
+    <section class="chapter chapter--zero" id="zero" data-chapter="3">
+      <div class="portal-label" aria-hidden="true">
+        <span>YOU HAVE REACHED</span>
+        <strong>ZERO</strong>
+        <span>THERE IS NOTHING HERE</span>
+      </div>
+      <div class="chapter__copy chapter__copy--center reveal-block">
+        <p class="eyebrow">WORLD 03 / THE SILENCE AFTER EVERYTHING</p>
+        <h2>AND THEN,<br /><em>YOU.</em></h2>
+        <p>You came looking for a website.<br />You found the edge of one.</p>
+        <button class="restart magnetic" id="restartButton">
+          <span>↻</span> RETURN TO ORIGIN
+        </button>
+      </div>
+      <footer class="footer">
+        <span>VOID/03 IS NOT A PLACE</span>
+        <span>MADE OF LIGHT + BOREDOM</span>
+        <span>© 2026 / NOWHERE</span>
+      </footer>
+    </section>
+  </main>
+
+  <div class="reticle" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+  <div class="system-message" id="systemMessage" role="status"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
