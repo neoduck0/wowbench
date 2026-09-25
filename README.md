@@ -9,6 +9,7 @@ One-shot websites built by different models from an empty folder, each given the
 | [`grok/`](grok/) | **Grok 4.6** | High | Grok Build | 33 minutes | APHELION |
 | [`claude/`](claude/) | **Claude Opus 5.5** | High | Claude Code | 13 minutes | Event Horizon |
 | [`space-bunny/`](space-bunny/) | **Space Bunny Free** | High | OpenCode | 2 minutes 28 seconds | VOID/03 |
+| [`codex/`](codex/) | **GPT 6 Astra** | High | Codex | 15 minutes | OTHERWORLD |
 
 ## Grok: APHELION
 
@@ -48,3 +49,14 @@ python3 -m http.server 8000
 Then open [http://localhost:8000](http://localhost:8000).
 
 Click **Initiate Descent**. Scroll or press `Space` to travel. **Fracture the Sky** breaks the background, and the top-right button toggles sound.
+
+## Codex: OTHERWORLD
+
+An interactive cosmic observatory with three animated phenomena, a custom WebGL shader, immersive mode, field notes, and a locally synthesized soundtrack. HTML, CSS, and JavaScript with no runtime dependencies.
+
+```bash
+cd codex
+npm run dev
+```
+
+Then open [http://localhost:5173](http://localhost:5173). Choose a phenomenon with the tabs or arrow keys, drag to distort the view, and click **Enter the Void** for immersive mode.

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#080a0c" />
+    <meta
+      name="description"
+      content="An interactive field guide to the impossible. Explore black holes, dying stars, and passages through spacetime at OTHERWORLD."
+    />
+    <title>OTHERWORLD — A field guide to the impossible</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80'%3E%3Crect width='80' height='80' rx='20' fill='%23080a0c'/%3E%3Cellipse cx='40' cy='40' rx='30' ry='13' transform='rotate(-35 40 40)' fill='none' stroke='%23f79069' stroke-width='5'/%3E%3Ccircle cx='40' cy='40' r='17' fill='%23080a0c' stroke='%23f79069' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <div class="grain" aria-hidden="true"></div>
+    <header class="header">
+      <a class="brand" href="#" aria-label="Otherworld home"
+        ><svg viewBox="0 0 48 38" aria-hidden="true">
+          <ellipse
+            cx="24"
+            cy="19"
+            rx="22"
+            ry="8"
+            transform="rotate(-32 24 19)"
+          />
+          <circle cx="24" cy="19" r="12" /></svg
+        >OTHERWORLD<span>®</span></a
+      >
+      <span class="header-note">A FIELD GUIDE TO THE IMPOSSIBLE</span>
+      <div class="header-actions">
+        <button class="sound-button" id="sound" aria-pressed="false">
+          <span class="sound-bars" aria-hidden="true"
+            ><i></i><i></i><i></i><i></i></span
+          ><span id="sound-label">SOUND OFF</span></button
+        ><button
+          class="round-button"
+          id="fullscreen"
+          aria-label="Enter fullscreen"
+        >
+          <svg viewBox="0 0 20 20">
+            <path d="M3 7V3h4m6 0h4v4M3 13v4h4m6 0h4v-4" />
+          </svg>
+        </button>
+      </div>
+    </header>
+    <main>
+      <section
+        class="experience"
+        id="experience"
+        aria-label="Interactive cosmic observatory"
+      >
+        <canvas
+          id="universe"
+          aria-label="An animated cosmic phenomenon. Drag to change its perspective."
+          role="img"
+        ></canvas>
+        <div class="scene-grid" aria-hidden="true"></div>
+        <div class="topline">
+          <span><i class="status-dot"></i> OBSERVATORY ONLINE</span
+          ><span>EST. BEYOND TIME & SPACE</span>
+        </div>
+        <div class="hero-copy">
+          <div class="eyebrow">
+            <span class="short-line"></span> LEAVE THE FAMILIAR BEHIND
+          </div>
+          <h1>The edge of<br />everything<span class="accent">.</span></h1>
+          <p>
+            A little curiosity. An infinite universe.<br />Step into the places
+            that shouldn’t exist.
+          </p>
+          <button class="explore-button" id="enter">
+            <span class="button-orbit" aria-hidden="true">↗</span>ENTER THE
+            VOID<span class="button-hint">[ HOLD ON ]</span>
+          </button>
+        </div>
+        <div class="coordinates" aria-hidden="true">
+          <span>RA 17h 45m 40.0s</span><span>DEC −29° 00′ 28.1″</span>
+        </div>
+        <div class="scene-label">
+          <span class="label-cross">+</span>
+          <div>
+            <span id="object-name">SAGITTARIUS A*</span
+            ><small id="object-detail">SUPERMASSIVE BLACK HOLE</small>
+          </div>
+          <span class="label-line"></span>
+        </div>
+        <div class="side-index" aria-label="Select phenomenon">
+          <button
+            class="active"
+            data-scene="0"
+            aria-label="Singularity"
+            aria-pressed="true"
+          >
+            01</button
+          ><span></span
+          ><button data-scene="1" aria-label="Supernova" aria-pressed="false">
+            02</button
+          ><button data-scene="2" aria-label="Wormhole" aria-pressed="false">
+            03
+          </button>
+        </div>
+        <div class="drag-hint">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              d="M4 9a9 9 0 0 1 16 0M4 9V4m0 5h5M20 15a9 9 0 0 1-16 0m16 0v5m0-5h-5"
+            /></svg
+          ><span>DRAG TO DISTORT REALITY</span>
+        </div>
+        <div class="journey-hud" aria-live="polite">
+          <span>YOU ARE NOW BEYOND THE FAMILIAR</span>
+          <h2>Let go of gravity.</h2>
+          <button id="return">↙ RETURN TO OBSERVATORY</button>
+        </div>
+        <div class="bottom-panel">
+          <div class="scene-tabs" role="group" aria-label="Phenomena">
+            <button class="scene-tab active" data-scene="0" aria-pressed="true">
+              <span>01</span>
+              <div>Singularity<small>WHERE LIGHT SURRENDERS</small></div>
+              <i>↗</i></button
+            ><button class="scene-tab" data-scene="1" aria-pressed="false">
+              <span>02</span>
+              <div>Supernova<small>A BEAUTIFUL ENDING</small></div>
+              <i>↗</i></button
+            ><button class="scene-tab" data-scene="2" aria-pressed="false">
+              <span>03</span>
+              <div>Wormhole<small>THE UNIVERSE’S SHORTCUT</small></div>
+              <i>↗</i>
+            </button>
+          </div>
+          <a class="scroll-link" href="#field-notes"
+            ><span>KEEP EXPLORING</span><span>↓</span></a
+          >
+        </div>
+        <div class="experience-footer">
+          <span>AN EXPERIMENT IN PERSPECTIVE</span
+          ><span class="live-time" id="time">00:00:00 UTC</span
+          ><span>BUILT FOR THE CURIOUS ↗</span>
+        </div>
+      </section>
+      <section class="field-notes" id="field-notes">
+        <div class="section-kicker">
+          <span>THE COSMIC COLLECTION</span><span>FIELD NOTES / 001—003</span>
+        </div>
+        <div class="section-heading">
+          <h2>Reality has a<br /><em>wild side.</em></h2>
+          <p>
+            Some things are too extraordinary to just read about.<br />Get
+            closer. Change your perspective. Stay curious.
+          </p>
+        </div>
+        <div class="note-cards">
+          <button class="note-card" data-note="0">
+            <div class="card-art blackhole">
+              <span class="art-orbit"></span><span class="art-core"></span
+              ><span class="art-caption">FIG. 001 / GRAVITATIONAL EXTREME</span>
+            </div>
+            <div class="card-title">
+              <span>01 / THE SINGULARITY</span><span>↗</span>
+            </div>
+            <h3>Even light has its limits.</h3>
+            <p>A point of no return. An invitation to wonder.</p>
+          </button>
+          <button class="note-card" data-note="1">
+            <div class="card-art supernova">
+              <span class="art-orbit"></span><span class="art-core"></span
+              ><span class="art-caption"
+                >FIG. 002 / STELLAR TRANSFORMATION</span
+              >
+            </div>
+            <div class="card-title">
+              <span>02 / THE SUPERNOVA</span><span>↗</span>
+            </div>
+            <h3>Go out with a universe.</h3>
+            <p>Every ending is someone else’s beginning.</p>
+          </button>
+          <button class="note-card" data-note="2">
+            <div class="card-art wormhole">
+              <span class="art-orbit"></span><span class="art-core"></span
+              ><span class="art-caption">FIG. 003 / THEORETICAL PASSAGE</span>
+            </div>
+            <div class="card-title">
+              <span>03 / THE WORMHOLE</span><span>↗</span>
+            </div>
+            <h3>Take the impossible route.</h3>
+            <p>What if here and there were the same place?</p>
+          </button>
+        </div>
+        <div class="closing">
+          <span class="closing-star">✳</span>
+          <p>Less ordinary.<br /><em>More otherworldly.</em></p>
+          <a href="#experience" aria-label="Back to the observatory">↑</a>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <a href="#">OTHERWORLD®</a><span>MADE OF STARDUST & CURIOSITY.</span
+      ><span>© 2026 · KEEP LOOKING UP.</span>
+    </footer>
+    <dialog id="note-dialog">
+      <button class="dialog-close" aria-label="Close field note">×</button
+      ><span class="eyebrow" id="note-kicker"></span>
+      <h2 id="note-title"></h2>
+      <p id="note-body"></p>
+      <div class="note-fact" id="note-fact"></div>
+      <button id="note-explore" class="explore-button">
+        EXPLORE THIS PHENOMENON <span>↗</span>
+      </button>
+    </dialog>
+    <div class="toast" id="toast" role="status"></div>
+  </body>
+</html>

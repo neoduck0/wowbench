@@ -1,0 +1,11 @@
+{
+  "name": "otherworld-observatory",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "python3 -m http.server 5173 --directory public",
+    "start": "python3 -m http.server 5173 --directory public",
+    "check": "node --check public/app.js"
+  }
+}
